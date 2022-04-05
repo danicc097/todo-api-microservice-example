@@ -2,9 +2,10 @@ linters:
   enable-all: true
 
   disable:
+    - errchkjson # Because it panics with: "fatal error: stack overflow" XXX Revisit
     - goerr113
-    - gofumpt # Prefer `gofmt` rules / some rules conflict with `wsl`
-    - gomnd # XXX: For now
+    - gofumpt    # Prefer `gofmt` rules / some rules conflict with `wsl`
+    - gomnd      # XXX: For now
     # The following are deprecated linters, added to avoid intial warning when running
     - golint
     - interfacer
@@ -15,10 +16,23 @@ linters-settings:
   lll:
     line-length: 130
   gci:
-    local-prefixes: github.com/MarioCarrion/todo-api/
+    no-inline-comments: true
+    no-prefix-comments: true
+    sections:
+      - standard
+      - default
+      - prefix(github.com/MarioCarrion/todo-api)
+    section-separators:
+      - newLine
   exhaustivestruct:
     struct-patterns:
       - 'github.com/MarioCarrion/todo-api/internal.*Params'
+  ireturn:
+    allow:
+      - error
+      - stdlib
+      #
+      - 'go.opentelemetry.io/otel/trace.Span'
   varnamelen:
     max-distance: 10
     ignore-type-assert-ok: true
@@ -45,6 +59,7 @@ issues:
     - path: _test\.go
       linters:
         - cyclop
+        - errchkjson
         - exhaustivestruct
         - funlen
         - goerr113
@@ -72,6 +87,9 @@ issues:
     - path: cmd/openapi-gen/main.go
       linters:
         - forbidigo
+    - path: cmd/internal/postgresql.go
+      linters:
+        - revive # blank-imports
     # XXX: This will be reremove in future episodes when "exhaustivestruct" is enabled
     - path: internal/postgresql/task.go
       linters:
@@ -79,3 +97,9 @@ issues:
     - path: internal/memcached/task.go
       linters:
         - lll
+    # Because of the env var testing and using t.Setenv
+    - path: internal/envvar/envvar_test.go
+      linters:
+        - paralleltest
+        - thelper
+        - tparallel
